@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlameMatch - Relationship Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff4757;
+            --secondary: #ff6b81;
+            --accent: #ff9f1a;
+            --dark: #1a1a2e;
+            --light: #ffffff;
+            --shadow: 0 10px 30px rgba(255, 71, 87, 0.2);
+            --gradient: linear-gradient(135deg, #ff4757, #ff9f1a);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.8rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 5px;
+            text-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .input-card {
+            flex: 1;
+            min-width: 320px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-card {
+            flex: 1;
+            min-width: 320px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: #ff9f1a;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 71, 87, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Flames Letters Animation */
+        .flames-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .flame-cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            transition: all 0.5s ease;
+            position: relative;
+            cursor: default;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .flame-cell.active {
+            background: var(--gradient);
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+            z-index: 10;
+        }
+
+        .flame-cell.eliminated {
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.2);
+            transform: scale(0.9);
+        }
+
+        .flame-cell.eliminated::after {
+            content: '✕';
+            position: absolute;
+            font-size: 2.8rem;
+            color: rgba(255, 71, 87, 0.5);
+        }
+
+        .status-bar {
+            font-size: 1.3rem;
+            margin: 20px 0;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            width: 100%;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-card {
+            text-align: center;
+            margin-top: 20px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            width: 100%;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+
+        .result-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+
+        .result-desc {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            max-width: 400px;
+        }
+
+        /* Share Options */
+        .share-options {
+            display: none;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .share-btn {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 0.95rem;
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .whatsapp { color: #25D366; }
+        .instagram { color: #E4405F; }
+        .message { color: #ff9f1a; }
+        .facebook { color: #1877F2; }
+
+        /* Game Facts */
+        .game-facts {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border-left: 4px solid #ff9f1a;
+        }
+
+        .facts-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #ff9f1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .fact-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .fact-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .fact-icon {
+            font-size: 1.5rem;
+            color: #ff4757;
+            margin-bottom: 10px;
+        }
+
+        .fact-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .flame-effect {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .flame-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ff4757;
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .logo {
+                font-size: 2.8rem;
+            }
+            
+            .flames-grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 250px;
+            }
+            
+            .flame-cell {
+                font-size: 1.8rem;
+            }
+            
+            .share-options {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .share-btn {
+                width: 100%;
+                max-width: 250px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Flame Particles -->
+    <div class="flame-effect" id="flameEffect"></div>
+
+    <div class="container">
+        <header>
+            <h1 class="logo">FlameMatch</h1>
+            <p class="tagline">Discover your relationship chemistry through the classic FLAMES game</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Card: Input Section -->
+            <div class="input-card">
+                <div class="input-group">
+                    <label><i class="fas fa-user-circle"></i> Your Name</label>
+                    <input type="text" id="name1" class="name-input" placeholder="Enter your name">
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-heart"></i> Partner's Name</label>
+                    <input type="text" id="name2" class="name-input" placeholder="Enter partner's name">
+                </div>
+
+                <button class="btn" id="calculateBtn">
+                    <i class="fas fa-fire"></i> Ignite FLAMES
+                </button>
+                
+                <button class="btn btn-secondary" id="resetBtn">
+                    <i class="fas fa-redo"></i> Start Over
+                </button>
+
+                <!-- Game Facts -->
+                <div class="game-facts">
+                    <h3 class="facts-title"><i class="fas fa-lightbulb"></i> About FLAMES</h3>
+                    <div class="facts-grid">
+                        <div class="fact-item">
+                            <div class="fact-icon"><i class="fas fa-history"></i></div>
+                            <div class="fact-text">FLAMES is a popular relationship prediction game that originated in schoolyards across Asia in the 1990s.</div>
+                        </div>
+                        <div class="fact-item">
+                            <div class="fact-icon"><i class="fas fa-brain"></i></div>
+                            <div class="fact-text">The game uses a mathematical elimination process based on the unique letters in two names.</div>
+                        </div>
+                        <div class="fact-item">
+                            <div class="fact-icon"><i class="fas fa-gamepad"></i></div>
+                            <div class="fact-text">Each letter in FLAMES represents a different relationship outcome - from Friends to Marriage!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Card: Game Section -->
+            <div class="game-card">
+                <!-- Flames Letters Grid -->
+                <div class="flames-grid" id="flamesGrid">
+                    <!-- Letters will be added by JavaScript -->
+                </div>
+                
+                <!-- Status Bar -->
+                <div class="status-bar" id="statusBar">
+                    Enter names and click "Ignite FLAMES"
+                </div>
+                
+                <!-- Result Display -->
+                <div class="result-card" id="resultCard">
+                    <div class="result-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <h2 class="result-title">Ready to Play?</h2>
+                    <p class="result-desc">Enter your name and your partner's name to discover your FLAMES relationship result!</p>
+                </div>
+                
+                <!-- Share Options -->
+                <div class="share-options" id="shareOptions">
+                    <button class="share-btn whatsapp" id="whatsappBtn">
+                        <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                    </button>
+                    <button class="share-btn instagram" id="instagramBtn">
+                        <i class="fab fa-instagram"></i> Share on Instagram
+                    </button>
+                    <button class="share-btn message" id="copyMessageBtn">
+                        <i class="fas fa-copy"></i> Copy Message
+                    </button>
+                    <button class="share-btn facebook" id="facebookBtn">
+                        <i class="fab fa-facebook"></i> Share on Facebook
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>FlameMatch &copy; 2023 | The classic FLAMES game reimagined | Made with <i class="fas fa-heart" style="color: #ff4757;"></i></p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM Elements
+        const name1Input = document.getElementById('name1');
+        const name2Input = document.getElementById('name2');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const flamesGrid = document.getElementById('flamesGrid');
+        const statusBar = document.getElementById('statusBar');
+        const resultCard = document.getElementById('resultCard');
+        const shareOptions = document.getElementById('shareOptions');
+        const flameEffect = document.getElementById('flameEffect');
+        
+        // FLAMES data
+        const flamesLetters = ['F', 'L', 'A', 'M', 'E', 'S'];
+        const flamesMeanings = {
+            'F': {
+                title: 'Friends', 
+                desc: 'A strong friendship bond! You two enjoy each other\'s company and share great camaraderie.',
+                icon: 'fas fa-users',
+                color: '#25D366'
+            },
+            'L': {
+                title: 'Lovers', 
+                desc: 'Romantic connection! There\'s a spark of love and passion between you two.',
+                icon: 'fas fa-heart',
+                color: '#E4405F'
+            },
+            'A': {
+                title: 'Affection', 
+                desc: 'Deep affection and care! You have a warm, caring relationship with strong mutual respect.',
+                icon: 'fas fa-star',
+                color: '#FFD700'
+            },
+            'M': {
+                title: 'Marriage', 
+                desc: 'Marriage potential! Your connection suggests long-term compatibility and commitment.',
+                icon: 'fas fa-ring',
+                color: '#C13584'
+            },
+            'E': {
+                title: 'Enemies', 
+                desc: 'Challenging dynamic! You may have conflicting personalities or competitive energy.',
+                icon: 'fas fa-fist-raised',
+                color: '#FF0000'
+            },
+            'S': {
+                title: 'Siblings', 
+                desc: 'Sibling-like bond! Your relationship is protective, familiar, and family-oriented.',
+                icon: 'fas fa-user-friends',
+                color: '#1877F2'
+            }
+        };
+        
+        // Game state
+        let gameState = {
+            name1: '',
+            name2: '',
+            flamesCount: 0,
+            currentFlames: [...flamesLetters],
+            result: null
+        };
+        
+        // Create flame particles
+        function createFlameParticles() {
+            flameEffect.innerHTML = '';
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'flame-particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 15}s`;
+                particle.style.animationDuration = `${15 + Math.random() * 10}s`;
+                flameEffect.appendChild(particle);
+            }
+        }
+        
+        // Initialize the game
+        function initGame() {
+            // Create flame letter grid
+            flamesGrid.innerHTML = '';
+            flamesLetters.forEach(letter => {
+                const cell = document.createElement('div');
+                cell.className = 'flame-cell';
+                cell.textContent = letter;
+                cell.id = `flame-${letter}`;
+                flamesGrid.appendChild(cell);
+            });
+            
+            // Create background particles
+            createFlameParticles();
+            
+            // Set up event listeners
+            calculateBtn.addEventListener('click', startCalculation);
+            resetBtn.addEventListener('click', resetGame);
+            
+            // Enter key to calculate
+            name1Input.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') startCalculation();
+            });
+            
+            name2Input.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') startCalculation();
+            });
+            
+            // Share buttons
+            document.getElementById('whatsappBtn').addEventListener('click', shareOnWhatsApp);
+            document.getElementById('instagramBtn').addEventListener('click', shareOnInstagram);
+            document.getElementById('copyMessageBtn').addEventListener('click', copyMessage);
+            document.getElementById('facebookBtn').addEventListener('click', shareOnFacebook);
+        }
+        
+        // Start the FLAMES calculation
+        function startCalculation() {
+            const name1 = name1Input.value.trim().toLowerCase();
+            const name2 = name2Input.value.trim().toLowerCase();
+            
+            if (!name1 || !name2) {
+                statusBar.textContent = 'Please enter both names!';
+                statusBar.style.color = '#ff4757';
+                return;
+            }
+            
+            // Reset UI
+            resetFlamesUI();
+            calculateBtn.disabled = true;
+            statusBar.textContent = 'Calculating your chemistry... 🔥';
+            statusBar.style.color = '#ffffff';
+            shareOptions.style.display = 'none';
+            
+            // Save names
+            gameState.name1 = name1;
+            gameState.name2 = name2;
+            gameState.currentFlames = [...flamesLetters];
+            gameState.result = null;
+            
+            // Calculate FLAMES count
+            setTimeout(() => calculateFlamesStep1(name1, name2), 1000);
+        }
+        
+        // Step 1: Calculate FLAMES count
+        function calculateFlamesStep1(name1, name2) {
+            // Remove spaces
+            const arr1 = name1.replace(/\s/g, '').split('');
+            const arr2 = name2.replace(/\s/g, '').split('');
+            
+            // Find common characters
+            const common = [];
+            const unique1 = [...arr1];
+            const unique2 = [...arr2];
+            
+            // Remove common characters
+            for (let i = arr1.length - 1; i >= 0; i--) {
+                const char = arr1[i];
+                const indexIn2 = unique2.indexOf(char);
+                if (indexIn2 !== -1) {
+                    common.push(char);
+                    unique1.splice(i, 1);
+                    unique2.splice(indexIn2, 1);
+                }
+            }
+            
+            // Calculate flames count
+            const flamesCount = unique1.length + unique2.length;
+            gameState.flamesCount = flamesCount === 0 ? 6 : flamesCount;
+            
+            statusBar.innerHTML = `Found <strong>${common.length}</strong> common letters<br>FLAMES Count: <strong>${gameState.flamesCount}</strong>`;
+            
+            // Start elimination after delay
+            setTimeout(() => startElimination(), 2000);
+        }
+        
+        // Start the elimination process
+        function startElimination() {
+            statusBar.innerHTML = `Starting elimination with count: <strong>${gameState.flamesCount}</strong>`;
+            setTimeout(() => eliminateNextLetter(), 1500);
+        }
+        
+        // Eliminate next letter
+        function eliminateNextLetter() {
+            if (gameState.currentFlames.length === 1) {
+                gameState.result = gameState.currentFlames[0];
+                showFinalResult();
+                return;
+            }
+            
+            // Calculate which letter to eliminate
+            let indexToRemove = (gameState.flamesCount - 1) % gameState.currentFlames.length;
+            const letterToRemove = gameState.currentFlames[indexToRemove];
+            
+            // Highlight and remove the letter
+            highlightLetter(letterToRemove);
+            
+            setTimeout(() => {
+                gameState.currentFlames.splice(indexToRemove, 1);
+                eliminateLetterUI(letterToRemove);
+                
+                statusBar.innerHTML = `Removed: <strong>${letterToRemove}</strong> | Remaining: <strong>${gameState.currentFlames.join(' ')}</strong>`;
+                
+                // Continue elimination
+                setTimeout(() => eliminateNextLetter(), 1500);
+            }, 1000);
+        }
+        
+        // Highlight a letter
+        function highlightLetter(letter) {
+            const element = document.getElementById(`flame-${letter}`);
+            if (element) {
+                element.classList.add('active');
+            }
+        }
+        
+        // Mark letter as eliminated
+        function eliminateLetterUI(letter) {
+            const element = document.getElementById(`flame-${letter}`);
+            if (element) {
+                element.classList.remove('active');
+                element.classList.add('eliminated');
+            }
+        }
+        
+        // Show final result
+        function showFinalResult() {
+            const meaning = flamesMeanings[gameState.result];
+            
+            // Update result display
+            resultCard.innerHTML = `
+                <div class="result-icon" style="color: ${meaning.color}">
+                    <i class="${meaning.icon}"></i>
+                </div>
+                <h2 class="result-title" style="background: linear-gradient(135deg, ${meaning.color}, #ff9f1a)">${meaning.title}</h2>
+                <p class="result-desc">${meaning.desc}</p>
+                <div style="margin-top: 15px; font-size: 1rem; opacity: 0.8;">
+                    <i class="fas fa-fire" style="color: ${meaning.color}"></i> 
+                    The letter <strong>${gameState.result}</strong> in FLAMES
+                </div>
+            `;
+            
+            // Show share options
+            shareOptions.style.display = 'flex';
+            
+            // Re-enable button
+            calculateBtn.disabled = false;
+            
+            // Animate
+            resultCard.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                resultCard.style.transform = 'scale(1)';
+            }, 100);
+            
+            statusBar.innerHTML = `✨ Relationship Found: <strong>${meaning.title}</strong> ✨`;
+        }
+        
+        // Reset the game
+        function resetGame() {
+            name1Input.value = '';
+            name2Input.value = '';
+            name1Input.focus();
+            
+            resetFlamesUI();
+            
+            statusBar.textContent = 'Enter names and click "Ignite FLAMES"';
+            statusBar.style.color = '#ffffff';
+            
+            resultCard.innerHTML = `
+                <div class="result-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <h2 class="result-title">Ready to Play?</h2>
+                <p class="result-desc">Enter your name and your partner's name to discover your FLAMES relationship result!</p>
+            `;
+            
+            shareOptions.style.display = 'none';
+            calculateBtn.disabled = false;
+        }
+        
+        // Reset flames UI
+        function resetFlamesUI() {
+            document.querySelectorAll('.flame-cell').forEach(el => {
+                el.classList.remove('active', 'eliminated');
+            });
+        }
+        
+        // Share on WhatsApp
+        function shareOnWhatsApp() {
+            const name1 = name1Input.value || 'Name1';
+            const name2 = name2Input.value || 'Name2';
+            const result = gameState.result ? flamesMeanings[gameState.result].title : 'FLAMES result';
+            
+            const text = `🔥 *FLAMES Result* 🔥\n\n${name1} ❤️ ${name2}\nRelationship: *${result}*\n\nCheck your chemistry at FlameMatch!`;
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+        
+        // Share on Instagram
+        function shareOnInstagram() {
+            const name1 = name1Input.value || 'Name1';
+            const name2 = name2Input.value || 'Name2';
+            const result = gameState.result ? flamesMeanings[gameState.result].title : 'FLAMES result';
+            
+            const text = `🔥 FLAMES Result 🔥\n${name1} ❤️ ${name2}\nRelationship: ${result}\n\nTry the FLAMES game!`;
+            alert('To share on Instagram:\n1. Take a screenshot of your result\n2. Open Instagram\n3. Post the screenshot with this caption:\n\n' + text);
+        }
+        
+        // Copy message to clipboard
+        function copyMessage() {
+            const name1 = name1Input.value || 'Name1';
+            const name2 = name2Input.value || 'Name2';
+            const result = gameState.result ? flamesMeanings[gameState.result].title : 'FLAMES result';
+            
+            const text = `🔥 FLAMES Relationship Result 🔥\n\n✨ ${name1} ❤️ ${name2} ✨\n\nYour Relationship: ${result}\n\nDiscover your chemistry with FlameMatch!`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = statusBar.textContent;
+                statusBar.textContent = 'Message copied to clipboard! 📋';
+                statusBar.style.color = '#25D366';
+                
+                setTimeout(() => {
+                    if (gameState.result) {
+                        statusBar.innerHTML = `✨ Relationship: <strong>${flamesMeanings[gameState.result].title}</strong> ✨`;
+                    }
+                    statusBar.style.color = '#ffffff';
+                }, 2000);
+            });
+        }
+        
+        // Share on Facebook
+        function shareOnFacebook() {
+            const name1 = name1Input.value || 'Name1';
+            const name2 = name2Input.value || 'Name2';
+            const result = gameState.result ? flamesMeanings[gameState.result].title : 'FLAMES result';
+            
+            const text = `Check out my FLAMES relationship result: ${name1} & ${name2} = ${result}! Try the FLAMES game yourself!`;
+            const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+        
+        // Initialize the game
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
